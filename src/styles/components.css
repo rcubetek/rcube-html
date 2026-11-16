@@ -504,3 +504,10 @@ h6.rc-modal-title { font-size: 1rem; }
 }
 .rc-row > * { flex-shrink: 0; width: 100%; max-width: 100%; padding-right: calc(var(--rc-gutter-x) * .5); padding-left: calc(var(--rc-gutter-x) * .5); margin-top: var(--rc-gutter-y); }
 .rc-col { flex: 1 0 0%; }
+
+/* Websites drawn from data (rcube-site.js, rcube-html render): a region and its form add no box of their own, so the
+   page's own layout (sticky headers, grids) works as if the schema's elements were written in the page */
+[data-rcube-region], [data-rcube-region] > rcube-form, [data-rcube-ssr] { display: contents; }
+/* Message: a line of text code changes (api.setNodeProps) */
+.rc-message { margin: .75rem 0 0; font-size: .875em; color: var(--rc-secondary-color, #6c757d); }
+.rc-message.ok { color: var(--rc-success, #198754); }

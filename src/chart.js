@@ -1,5 +1,5 @@
 import { registerComponent } from "./html";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Button } from "./ui";
 import { useTranslator } from "./i18n";
 import { formatValue, matchesRule } from "./tableUtils";
@@ -33,9 +33,9 @@ export { CHART_COLORS } from "./palette";
 const CHART_COLORS_DARK = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9', '#e66767'];
 
 const CHART_CSS = `
-.rcube-chart{${CHART_COLORS.map((c, i) => `--rc-s${i + 1}:${c};`).join('')}position:relative}
+.rcube-chart{${CHART_COLORS.map((c, i) => `--rc-s${i + 1}:${c};`).join('')}position:relative;min-width:0;max-width:100%}
 [data-bs-theme=dark] .rcube-chart{${CHART_COLORS_DARK.map((c, i) => `--rc-s${i + 1}:${c};`).join('')}}
-.rcube-chart svg{display:block;overflow:visible;touch-action:pan-y}
+.rcube-chart svg{display:block;overflow:visible;touch-action:pan-y;max-width:100%}
 .rcube-chart svg:focus{outline:none}
 .rcube-chart svg:focus-visible{outline:2px solid var(--rc-primary);outline-offset:4px;border-radius:4px}
 .rcube-chart .rc-legend-item{background:none;border:0;padding:2px 6px;border-radius:4px;color:var(--rc-secondary-color);font-size:.8125rem;display:inline-flex;align-items:center;gap:6px}
@@ -159,12 +159,18 @@ const useTween = (target, enabled, duration) => {
   return sameShape ? frame : target;
 };
 
+// in the browser, before the first paint (a phone never sees the 600px drawing); on the server, the 600px guess
+const useBeforePaint = typeof window === 'undefined' ? useEffect : useLayoutEffect;
+
 const useWidth = (ref) => {
   const [width, setWidth] = useState(600);
-  useEffect(() => {
+  useBeforePaint(() => {
     const el = ref.current;
-    if (!el || typeof ResizeObserver === 'undefined') return undefined;
-    const observer = new ResizeObserver(([entry]) => setWidth(Math.max(200, Math.floor(entry.contentRect.width))));
+    if (!el) return undefined;
+    const fit = (w) => { if (w > 0) setWidth(Math.max(200, Math.floor(w))); };
+    fit(el.clientWidth);
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(([entry]) => fit(entry.contentRect.width));
     observer.observe(el);
     return () => observer.disconnect();
   }, [ref]);

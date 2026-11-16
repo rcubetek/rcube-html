@@ -23,11 +23,13 @@
 // el.ready: a Promise of the api, for a script that may run after the form started (el.ready.then((api) => …))
 //
 // Markup already inside the element (a server-rendered form, a "loading" message) stays until the form replaces it.
+// <rcube-form hydrate> (written by rcube-html/server with prerender) takes its drawn form over instead of replacing it.
 import { createElement as h, useEffect, useMemo, useRef } from "react";
 import { flushSync } from "react-dom";
-import { createRoot } from "react-dom/client";
+import { createRoot, hydrateRoot } from "react-dom/client";
 import { DynamicTag } from "./DynamicTag";
 import { useDynamicTag } from "./useDynamicTag";
+import { onComponentRegistered } from "./html";
 
 export const FORM_OPTIONS = ["schema", "buttons", "actions", "messages", "languages", "language", "data", "repeatable", "values"];
 // options that can be written as JSON in the page
@@ -91,6 +93,13 @@ function ElementForm({ host, options }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language, languages]);
   useEffect(() => {
+    if (host.hydrating) {
+      host.hydrating = false;
+      if (host.drawAfterHydrating) {
+        host.drawAfterHydrating = false;
+        host.render();
+      }
+    }
     host.resolveReady(host.liveApi);
     host.emit("rcube-ready", { api: host.liveApi });
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -160,6 +169,8 @@ export class RcubeFormElement extends Base {
     // removed for good (not just moved): stop React
     queueMicrotask(() => {
       if (this.isConnected || !this.root) return;
+      this.stopListening?.();
+      this.stopListening = null;
       this.root.unmount();
       this.root = null;
       this.form = null;
@@ -186,6 +197,28 @@ export class RcubeFormElement extends Base {
   }
 
   start() {
+    // A component registered after this form was drawn (rcube-html.js and rcube-html/element define <rcube-form> before
+    // their Chart, DataTable, … load, and a page may import one later): draw again, so it shows instead of "isn't loaded"
+    this.stopListening ||= onComponentRegistered(() => this.render());
+    // <rcube-form hydrate> with the form drawn on the server (rcube-html/server, `rcube-html render`): React takes the
+    // drawn markup over instead of drawing it again — no flash, and the page reads the same before JavaScript runs.
+    // The options must be the ones it was drawn with (its JSON); a difference makes React draw it again (a warning).
+    const drawn = this.hasAttribute("hydrate") ? [...this.children].find((node) => node.hasAttribute?.("data-rcube-ssr")) : null;
+    if (drawn) {
+      drawn.style.display = "contents";
+      // until React has taken the markup over, new options are drawn when React is ready (not with flushSync)
+      this.hydrating = true;
+      // after the script that defined the element has run: rcube-html.js defines it before its Chart, DataTable, …
+      // register, and the drawn form may use them
+      this.root = { render: () => {}, unmount: () => {} };
+      queueMicrotask(() => {
+        if (!this.isConnected) return;
+        this.root = hydrateRoot(drawn, h(ElementForm, { host: this, options: this.options }), {
+          onRecoverableError: (error) => console.warn("<rcube-form hydrate>: the drawn form differed from its options and was drawn again.", error),
+        });
+      });
+      return;
+    }
     // the form goes into its own box; what was in the element (server-rendered markup) leaves once it's drawn
     const box = document.createElement("div");
     box.setAttribute("data-rcube-root", "");
@@ -207,7 +240,10 @@ export class RcubeFormElement extends Base {
     this.drawQueued = true;
     queueMicrotask(() => {
       this.drawQueued = false;
-      if (this.root) flushSync(() => this.draw());
+      if (!this.root) return;
+      // a new draw while React takes the drawn form over would make it drop the markup: draw once it's done
+      if (this.hydrating) this.drawAfterHydrating = true;
+      else flushSync(() => this.draw());
     });
   }
 

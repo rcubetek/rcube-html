@@ -30,11 +30,13 @@ One npm package, `rcube-html`, holds everything:
 | `<rcube-form>` element | `src/element.js`, `src/element/*.js` → `dist/element/` | `import "rcube-html/element"` |
 | Vue wrapper | `src/element/vue.js` → `dist/element/vue.js` | `import { RcubeForm } from "rcube-html/vue"` |
 | Script-tag bundles | `src/browser.js`, `src/browser-core.js` → `dist/browser/` | `<script src="…/rcube-html.js">` |
-| Node server helper | `src/server.js` → `dist/server.js` | `import { renderFormHtml } from "rcube-html/server"` |
+| Node server helper | `src/server.js` → `dist/server.js` | `import { renderFormHtml, renderPage } from "rcube-html/server"` |
+| Websites from data | `src/site/*.js` → `dist/browser/rcube-site.js` | `<script src="…/rcube-site.js">` |
+| Command line | `src/cli.js`, `bin/rcube-html.js` → `dist/cli/` | `npx rcube-html render <folder>` |
 | Angular component | `integrations/angular/rcube-form.component.ts` | copied into the Angular app |
 | JSP tag | `integrations/jsp/rcube-form.tag` | copied to `WEB-INF/tags/rcube/` |
 | TypeScript types | `types/*.d.ts` | used by editors and TypeScript on their own |
-| Tests | `scripts/smoke.mjs`, `features.mjs`, `element.mjs` | `npm test` |
+| Tests | `scripts/smoke.mjs`, `features.mjs`, `element.mjs`, `site.mjs` | `npm test` |
 
 ## Get it
 
@@ -285,7 +287,87 @@ import { renderFormHtml } from "rcube-html/server";
 const html = renderFormHtml({ schema, values }, { attributes: { id: "signup", actions: "signupActions" } });
 ```
 
-The browser form replaces the drawn one when the script starts (text typed before that is not kept).
+The browser form replaces the drawn one when the script starts (text typed before that is not kept). With
+`{ hydrate: true }` the element gets the attribute `hydrate` and the browser takes the drawn form over instead
+(React hydration: no flash; the options must be the ones it was drawn with).
+
+## Websites: pages drawn from data, in the browser or ahead of time
+
+A static website (no server code) can keep its text and layout as schema in data files and let rcube-html draw the
+pages. Each page is a frame with **regions**:
+
+```html
+<div data-rcube-region="header"></div>
+<div data-rcube-region="main"><noscript>This site needs JavaScript.</noscript></div>
+<div data-rcube-region="footer"></div>
+<script src="rcube-html.js" defer></script>
+<script src="rcube-site.js" defer></script>      <!-- dist/browser/rcube-site.js -->
+<script src="data/site.js" defer></script>       <!-- RcubeSite.site({ … }) : shared by every page -->
+<script src="data/pages/about.js" defer></script><!-- RcubeSite.page({ … }) : this page -->
+```
+
+```js
+RcubeSite.site({
+  render: "server",                                        // the default for every region (see below)
+  themeKey: "site-theme",                                  // light / dark choice of a .theme-toggle button
+  regions: {
+    header: { schema: [ … ] },
+    footer: { render: "static", schema: [ /* "{year}" becomes the year */ ] },
+  },
+});
+RcubeSite.page({
+  regions: { main: { schema: [ … ] } },
+  fromUrl: { topic: { school: "School Office" } },          // ?topic=school fills the field "topic"
+});
+```
+
+Schemas use every component plus three for whole pages: `El` (any HTML element with text and nodes inside:
+`{ "type": "El", "props": { "tag": "section", "className": "hero" }, "children": [ "Text ", { node } ] }`),
+`Message` (a line code changes with `api.setNodeProps`) and `ClientOnly` (see below). Menu links (`A` inside an
+`El` with `"tag": "nav"`) to the current page get `aria-current="page"`.
+`RcubeSite.onSubmit((values, form) => …)` runs after a form's `runValidation()` passes;
+`RcubeSite.component(name, fn)` registers a component of the site's own.
+
+### Drawing pages ahead of time: `rcube-html render`
+
+Without anything else, every page is drawn in the browser. To put the whole page in the HTML (search engines, link
+previews, no blank moment), draw it ahead of time — before publishing, or in an npm build:
+
+```bash
+npx rcube-html render public_html               # rewrites the pages in place (again: replaces what it drew)
+npx rcube-html render site --out dist           # writes a drawn copy
+npx rcube-html render public_html --env prod    # facts that "render" conditions read (also --lang)
+npx rcube-html render public_html --mode client # takes every page back to "drawn in the browser"
+npx rcube-html render public_html --check       # changes nothing; exit 1 if a page isn't drawn as asked (CI)
+```
+
+The command has React inside (nothing else to install) and runs the page's data files (its scripts under `data/`,
+`--data` to change). Node code can do the same with `renderPage(html, { site, page, facts, mode })` from
+`rcube-html/server`.
+
+Each region's `render` says how it is drawn:
+
+| `render` | Ahead of time | In the browser |
+|---|---|---|
+| `"server"` (default) | drawn, with its JSON | taken over (forms, menus work); nothing is drawn again |
+| `"static"` | drawn as plain HTML | left as it is (no JavaScript) |
+| `"client"` | its `placeholder` schema (if any) and `noscript` HTML | drawn |
+
+A region's own `render` wins, then the page's, then the site's; `--mode` overrides them all. `render` can depend on
+what the build knows — never on the visitor:
+
+```js
+render: { default: "client", prod: "server" }                                  // by --env
+render: { when: { lang: ["en"], env: "prod" }, then: "server", else: "client" } // env, lang, page: a value or a list
+```
+
+Inside a region drawn ahead of time, a node with `"render": "client"` is drawn in the browser only (its
+`"placeholder"` nodes are drawn ahead of time in its place) — e.g. a form in an otherwise pre-rendered page. Its fields
+belong to the region's form, so `runValidation()` and `onSubmit` see them. Things that depend on the visitor (logged in,
+the address, the time) belong in `"client"` parts; `visibleWhen` works as everywhere.
+
+Fields of one form must be in one region. Components of the site's own (`RcubeSite.component`) are known in the
+browser only: use them in `"client"` parts, or draw those regions in the browser.
 
 ## Schema nodes
 

@@ -174,7 +174,22 @@ for (const file of ["rcube-html.js", "rcube-html.core.js"]) {
   assert.equal(!!page.window.RcubeHtml.ComponentRegistry.DataTable, file === "rcube-html.js", `${file}: DataTable only in the full bundle`);
   page.window.close();
 }
-console.log("browser script: ok (rcube-html.js, rcube-html.core.js)");
+// a form already in the page, with components that register after <rcube-form> is defined: they're drawn, not "isn't loaded"
+{
+  const big = [
+    { type: "Chart", id: "pg-chart", props: { chartType: "bar", height: 120, labels: ["A", "B"], series: [{ key: "n", name: "N", data: [1, 2] }] } },
+    { type: "DataTable", id: "pg-table", props: { columns: [{ key: "a", label: "A" }], rows: [{ a: "x" }] } },
+  ];
+  const page = new JSDOM(`<!doctype html><body><rcube-form id="b">${json("schema", big)}</rcube-form></body>`, { runScripts: "outside-only", pretendToBeVisual: true, url: "http://localhost/" });
+  page.window.eval(readFileSync(new URL("../dist/browser/rcube-html.js", import.meta.url), "utf8"));
+  await tick(20);
+  const drawn = page.window.document.getElementById("b");
+  assert.doesNotMatch(drawn.textContent, /isn't loaded/, "rcube-html.js: Chart and DataTable in a form already in the page");
+  assert.ok(drawn.querySelector(".rcube-chart svg"), "rcube-html.js: the chart is drawn");
+  assert.ok(drawn.querySelector("table"), "rcube-html.js: the table is drawn");
+  page.window.close();
+}
+console.log("browser script: ok (rcube-html.js, rcube-html.core.js, components drawn in a form already in the page)");
 
 // ---------------------------------------------------------------- 6. types/element.d.ts names every export
 const declared = new Set([...readFileSync(new URL("../types/element.d.ts", import.meta.url), "utf8").matchAll(/\b(?:function|const|interface)\s+(\w+)|(?:^|,)\s*(\w+): (?:any|string)/gm)].map((m) => m[1] || m[2]));

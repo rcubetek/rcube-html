@@ -1,6 +1,6 @@
 {
   "name": "rcube-html",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "rcube-html Schema-driven form and layout engine: describe rows, columns, fields and buttons as JSON and it renders them, with validation, conditional and dependent fields, input masks, repeatable entries, runtime changes and multi-language text. Native in React; the <rcube-form> web component for Angular, Vue, plain JavaScript and server-rendered pages (JSP, PHP, .NET). Works with any CSS framework, including Bootstrap. One library for any framework or project: React, Angular, Vue, JavaScript, and Server-rendered pages (JSP, PHP, .NET)",
   "keywords": [
     "rcube-html",
@@ -82,6 +82,8 @@
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
+  "unpkg": "dist/browser/rcube-html.js",
+  "jsdelivr": "dist/browser/rcube-html.js",
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -166,7 +168,11 @@
     },
     "./package.json": "./package.json"
   },
+  "bin": {
+    "rcube-html": "bin/rcube-html.js"
+  },
   "files": [
+    "bin",
     "dist",
     "types",
     "integrations",
@@ -183,7 +189,7 @@
     "dev": "node scripts/build-styles.mjs && tsup --watch",
     "styles": "node scripts/build-styles.mjs",
     "prepublishOnly": "npm run build",
-    "test": "node scripts/smoke.mjs && node scripts/features.mjs && node scripts/element.mjs"
+    "test": "node scripts/smoke.mjs && node scripts/features.mjs && node scripts/element.mjs && node scripts/site.mjs"
   },
   "peerDependencies": {
     "react": ">=18",

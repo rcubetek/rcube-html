@@ -3,6 +3,7 @@ import { translateProps, useTranslator } from './i18n';
 import { BUILT_IN_CONTAINERS, BUILT_IN_DISPLAY } from './components';
 import { Container, Row, Col, Image } from "./ui";
 import { asList, childrenOf } from "./schema";
+import { useEffect, useState } from "react";
 
 // 1. Define UI components to resolve inside the layout
 
@@ -40,9 +41,37 @@ const LIST = ({ items = [], children, ...props }) => (
   </ul>
 );
 
+// <El>: any HTML element, its children text (strings) and schema nodes — for pages whose whole markup is schema:
+//   { "type": "El", "props": { "tag": "section", "className": "hero", "id": "top" }, "children": [ "Text ", { node } ] }
+// Props are React's (className, htmlFor, strokeWidth, aria-label, …).
+const EL_OWN = new Set(['node', 'nodeId', 'items', 'renderNodes', 'actions', 'formContext', 'tag', 'text', 'functionMap']);
+const El = (p) => {
+  const props = {};
+  Object.keys(p).forEach((k) => { if (!EL_OWN.has(k) && p[k] !== undefined) props[k] = p[k]; });
+  const parts = asList(p.node?.children).map((child) => (typeof child === 'string' ? child : p.renderNodes([child])));
+  if (p.text != null) parts.push(p.text);
+  const Tag = p.tag || 'div';
+  return <Tag {...props}>{parts.length ? parts : undefined}</Tag>;
+};
+
+// <Message>: a line of text code changes: api.setNodeProps("msg", { text: "Sent", ok: true }); nothing while empty
+const Message = ({ text, ok, className = 'rc-message', functionMap, ...props }) => (text
+  ? <p className={`${className}${ok ? ' ok' : ''}`} role="status" {...props}>{text}</p> : null);
+
+// <ClientOnly>: its content is drawn in the browser only. A page drawn ahead of time (rcube-html/server, the
+// `rcube-html render` command) shows the placeholder there; the browser shows the content once it has taken the page
+// over. Written by prepareSchema() for a node with "render": "client" (items: [content, placeholder]).
+const ClientOnly = ({ items = [], renderNodes }) => {
+  const [inBrowser, setInBrowser] = useState(false);
+  useEffect(() => setInBrowser(true), []);
+  const item = items.find((i) => i?.key === (inBrowser ? 'content' : 'placeholder'));
+  return <>{renderNodes(item?.children || [])}</>;
+};
+
 // 2. Map string keys to literal React components
 const ComponentRegistry = {
   Text,
+  El, Message, ClientOnly,
   ...textAliases, // H1, H2, H3, H4, H5, H6, P, SPAN, SMALL, STRONG, EM, LABEL, BLOCKQUOTE
   A, IMG, DIV, LIST,
   ...BUILT_IN_DISPLAY,    // Badge, Breadcrumb, ProgressBar, Spinner, ListGroup
@@ -72,7 +101,7 @@ const ActionFields = new Set(['RichTextField']);
 
 // Components that render nested schema nodes (node.children / node.items[].children / node.footer)
 // (DataTable, Chart, Calendar and Tree get the same props so they can reach the form's actions, errors and change tracking)
-const ContainerTypes = new Set([...Object.keys(BUILT_IN_CONTAINERS), 'DataTable', 'DynamicTable', 'Chart', 'Calendar', 'Tree']);
+const ContainerTypes = new Set([...Object.keys(BUILT_IN_CONTAINERS), 'El', 'ClientOnly', 'DataTable', 'DynamicTable', 'Chart', 'Calendar', 'Tree']);
 
 /**
  * Add a project-specific component to the registry so schemas can use it by name:
@@ -91,6 +120,14 @@ export const registerComponent = (name, component, { field = false, container = 
   if (field) FIELD_TYPES.add(name);
   if (field && actions) ActionFields.add(name);
   if (container) ContainerTypes.add(name);
+  registryListeners.forEach((listener) => listener(name));
+};
+
+// Told when a component is registered (internal: <rcube-form> redraws a form drawn before its Chart, DataTable, … came)
+const registryListeners = new Set();
+export const onComponentRegistered = (listener) => {
+  registryListeners.add(listener);
+  return () => registryListeners.delete(listener);
 };
 
 // Merge a node's runtime state into a copy of it: override props (style merged), and add the

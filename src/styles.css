@@ -295,6 +295,9 @@ h6.rc-modal-title{font-size: 1rem}
 .rc-row{--rc-gutter-x: 1.5rem;--rc-gutter-y: 0;display: flex;flex-wrap: wrap;margin-top: calc(-1 * var(--rc-gutter-y));margin-right: calc(-.5 * var(--rc-gutter-x));margin-left: calc(-.5 * var(--rc-gutter-x))}
 .rc-row>*{flex-shrink: 0;width: 100%;max-width: 100%;padding-right: calc(var(--rc-gutter-x) * .5);padding-left: calc(var(--rc-gutter-x) * .5);margin-top: var(--rc-gutter-y)}
 .rc-col{flex: 1 0 0%}
+[data-rcube-region], [data-rcube-region]>rcube-form, [data-rcube-ssr]{display: contents}
+.rc-message{margin: .75rem 0 0;font-size: .875em;color: var(--rc-secondary-color, #6c757d)}
+.rc-message.ok{color: var(--rc-success, #198754)}
 .rc-btn-primary{--rc-btn-color: #fff;--rc-btn-bg: var(--rc-primary);--rc-btn-border: var(--rc-primary);--rc-btn-hover-color: #fff;--rc-btn-hover-bg: color-mix(in srgb, var(--rc-primary) 85%, #000);--rc-btn-hover-border: color-mix(in srgb, var(--rc-primary) 85%, #000);--rc-btn-active-bg: color-mix(in srgb, var(--rc-primary) 80%, #000);--rc-btn-active-border: color-mix(in srgb, var(--rc-primary) 80%, #000);--rc-btn-focus-rgb: var(--rc-primary-rgb)}
 .rc-btn-outline-primary{--rc-btn-color: var(--rc-primary);--rc-btn-border: var(--rc-primary);--rc-btn-hover-color: #fff;--rc-btn-hover-bg: var(--rc-primary);--rc-btn-hover-border: var(--rc-primary);--rc-btn-active-color: #fff;--rc-btn-active-bg: var(--rc-primary);--rc-btn-active-border: var(--rc-primary);--rc-btn-focus-rgb: var(--rc-primary-rgb)}
 .rc-badge-primary, .rc-text-bg-primary{color: #fff !important;background-color: var(--rc-primary) !important}
