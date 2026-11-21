@@ -4,7 +4,7 @@ rcube-html is a schema-driven form and layout engine. Describe rows, columns, fi
 
 It works with any CSS framework — Bootstrap, Tailwind, a CMS theme, your own CSS or none — for building responsive pages.
 
-**Live demo and tutorials: [rcube-html.com](https://rcube-html.com/)** — every component with a live example, the events it fires, and copy-ready schema and page code ([source](https://github.com/rcubesystem/rcube-html-examples)).
+**Live demo and tutorials: [rcube-html.com](https://rcube-html.com/)** — every component with a live example, the events it fires, and copy-ready schema and page code ([source](https://github.com/rcubetek/rcube-html-examples)).
 
 ```bash
 npm install rcube-html
@@ -51,7 +51,7 @@ One npm package, `rcube-html`, holds everything:
 | Node server pages | npm: `npm install rcube-html` | `renderFormHtml(…)` from `rcube-html/server` |
 
 Starters with every example, one per framework (React, Angular, Vue, HTML, JSP), are in the
-[examples repository](https://github.com/rcubesystem/rcube-html-examples).
+[examples repository](https://github.com/rcubetek/rcube-html-examples).
 
 ## Styles and themes
 

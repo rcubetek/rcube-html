@@ -1,6 +1,6 @@
 {
   "name": "rcube-html",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "rcube-html Schema-driven form and layout engine: describe rows, columns, fields and buttons as JSON and it renders them, with validation, conditional and dependent fields, input masks, repeatable entries, runtime changes and multi-language text. Native in React; the <rcube-form> web component for Angular, Vue, plain JavaScript and server-rendered pages (JSP, PHP, .NET). Works with any CSS framework, including Bootstrap. One library for any framework or project: React, Angular, Vue, JavaScript, and Server-rendered pages (JSP, PHP, .NET)",
   "keywords": [
     "rcube-html",
@@ -73,11 +73,11 @@
   "author": "Riyaz Hameed <riyaz.mohamed@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rcubesystem/rcube-html.git"
+    "url": "git+https://github.com/rcubetek/rcube-html.git"
   },
-  "homepage": "https://github.com/rcubesystem/rcube-html#readme",
+  "homepage": "https://github.com/rcubetek/rcube-html#readme",
   "bugs": {
-    "url": "https://github.com/rcubesystem/rcube-html/issues"
+    "url": "https://github.com/rcubetek/rcube-html/issues"
   },
   "type": "module",
   "main": "./dist/index.cjs",
