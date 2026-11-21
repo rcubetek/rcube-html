@@ -73,11 +73,11 @@
   "author": "Riyaz Hameed <riyaz.mohamed@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rcubesystem/rcube-html.git"
+    "url": "git+https://github.com/rcubetek/rcube-html.git"
   },
-  "homepage": "https://github.com/rcubesystem/rcube-html#readme",
+  "homepage": "https://github.com/rcubetek/rcube-html#readme",
   "bugs": {
-    "url": "https://github.com/rcubesystem/rcube-html/issues"
+    "url": "https://github.com/rcubetek/rcube-html/issues"
   },
   "type": "module",
   "main": "./dist/index.cjs",
