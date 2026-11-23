@@ -1,4 +1,4 @@
-# rcube-html: An Open-Source, JSON-Driven HTML Page Renderer
+# rcube-html: A Free, JSON-Driven HTML Page Renderer
 
 rcube-html is a schema-driven form and layout engine. Describe rows, columns, fields and buttons as JSON-like objects, and it renders them — with built-in validation, conditional and dependent fields, input masks, repeatable entries, runtime changes and multi-language text. Use it natively in **React**, or as the `<rcube-form>` web component in **Angular, Vue, plain JavaScript, and server-rendered pages (JSP, PHP, .NET)**. Ships with its own components and stylesheet — no framework lock-in.
 
@@ -1093,9 +1093,18 @@ Panes that should open on a failed Submit are marked `data-rcube-pane="<key>"` i
 
 ## Author
 
-Riyaz Hameed — [riyaz.mohamed@gmail.com](mailto:riyaz.mohamed@gmail.com)
+RCube Technology Inc. ([rcubetek.com](https://rcubetek.com)), created by Riyaz Hameed.
 
 ## License
 
-MIT License, Apache License 2.0, and BSD License
-This software is provided “as is,” without warranty of any kind, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, or non-infringement. In no event shall the authors be liable for any claim, damages, or other liability arising from the use of this software.
+Copyright (c) 2026 RCube Technology Inc. All rights reserved.
+
+rcube-html is **free to use**, including in commercial products, under the [RCube HTML Free Use License](LICENSE.md). In short:
+
+- **You may** use it at no cost, build it into your own websites, apps and products (even ones you sell), ship it bundled inside them, and configure or change it for them.
+- **You may not** sell rcube-html itself, republish it or a changed copy or fork of it as a library or package, use it to make a competing form or layout library, or remove its copyright notices.
+- RCube Technology Inc. keeps ownership of rcube-html. Your own code and content stay yours.
+
+Versions 0.9.1 and earlier were published under the MIT license, and copies of those versions stay under it. Version 0.10.0 and later use the license above. For anything it doesn't allow, write to info.r4@rcubetek.com.
+
+The software is provided "as is", without warranty of any kind; see the [license](LICENSE.md) for the full terms.
